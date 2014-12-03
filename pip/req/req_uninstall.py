@@ -8,6 +8,7 @@ import tempfile
 
 from pip.compat import uses_pycache, WINDOWS
 from pip.exceptions import UninstallationError
+from pip.locations import running_under_virtualenv
 from pip.utils import (rmtree, ask, is_local, dist_is_local, renames,
                        normalize_path)
 from pip.utils.logging import indent_log
@@ -37,11 +38,15 @@ class UninstallPathSet(object):
 
     def _can_uninstall(self):
         if not dist_is_local(self.dist):
+            if running_under_virtualenv():
+                reason = "outside environment %s" % (sys.prefix,)
+            else:
+                reason = "owned by OS"
             logger.info(
-                "Not uninstalling %s at %s, outside environment %s",
+                "Not uninstalling %s at %s, %s",
                 self.dist.project_name,
                 normalize_path(self.dist.location),
-                sys.prefix,
+                reason
             )
             return False
         return True
